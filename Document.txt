@@ -1,0 +1,22 @@
+### Run code 
+
+# uvicorn filename:object name --reload
+uvicorn main:app --reload
+
+
+### Query Parameters
+Query Paramters are optional key-value pairs appended at the end of a URL, used to pass additional data to
+the server in an HTTP request. They are typically employed for operations like filtering, sorting, searching 
+and pagination, without altering the endpoint path itself.
+
+-- The ? marks the start of query parameters.
+-- Multiple parameters are seperated by &.
+-- Each parameter is a key-value pair: key=value
+
+### Query
+Query() is a utility function provided by FastAPI to declare, validate and document query parameter in your
+API endpoints.
+
+-- Set default parameter
+-- Enforce validation rules
+-- add metadata like description, title, examples
