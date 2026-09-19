@@ -7,7 +7,7 @@ import json
 
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, computed_field
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 
 # Object of FastAPI.
@@ -42,6 +42,14 @@ class Patient(BaseModel):
             return 'Normal'
         else:
             return 'obese'
+
+class PatientUpdate(BaseModel):
+    name: Annotated[Optional[str], Field(default=None)]
+    city: Annotated[Optional[str], Field(default=None)]
+    age: Annotated[Optional[int], Field(default=None, gt=0)]
+    gender: Annotated[Optional[Literal['male', 'female']], Field(default=None)]
+    height: Annotated[Optional[float], Field(default=None, gt=0)]
+    weight: Annotated[Optional[float], Field(default=None, gt=0)]
 
 
 def load_data():
@@ -134,9 +142,83 @@ def create_patient(patient:Patient):
     # model_dump will convert object into a dictionary.
     data[patient.id] = patient.model_dump(exclude=['id'])
 
+    # If you didn't exclude the ID, your data dictionary would look redundant:
+    ### data["P100"] = {"id": "P100", "name": "John Doe", "age": 30}
+
+    # By using exclude=['id']
+    ### data["P100"] = {"name": "John Doe", "age": 30}
+
 
     # Save into json file.
     save_data(data)
 
     return JSONResponse(status_code=201, content={'message': 'patient created successfully.'})
+
+
+############### Update the data of the patient ###############
+@app.put('/edit/{patient_id}')
+# PatientUpdate is a pydantic object
+def update_patient(patient_id: str, patient_update: PatientUpdate):
+
+    # Load existing data
+    data = load_data()
+
+    # Check whether entered patient_id is in the existing data or not.
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail='Patient Not Found')
+
+
+    # Extracting existing information
+    existing_patient_info = data[patient_id]
+
+    # We need to collect the information from the user through ### patient_update and update it in a ### existing_patient_info. 
+
+
+    # Convert patient_update object into a dictionary.
+    # if we don't write this exluce_unset = True then we get the all the fields from the PatientUpdate class but we required only those field which will be updated by user.
+    updated_patient_info = patient_update.model_dump(exclude_unset=True)
+
+    for key, value in updated_patient_info.items():
+        existing_patient_info[key] = value
+
+    data[patient_id] = existing_patient_info
+
+
+    # We convert existing_patient_info into object and recalucate bmi from the Patient class (1st class we created)
+    # We don't have id in a dictionary list som we need to add id.
+    existing_patient_info['id'] = patient_id
+    patient_pydantic_object = Patient(**existing_patient_info)
+
+    # we convert that object back into the dictionary
+    # Again when we get the data it include id but we don't need it.
+    existing_patient_info = patient_pydantic_object.model_dump(exclude='id')
+
+
+    # We get the dictionary and all the field but we need to reflect this into a data
+    # Add the above dictionary to data.
+    data[patient_id] = existing_patient_info
+
+
+    # Save data
+    save_data(data)
+
+    
+    return JSONResponse(status_code=200, content={'message': 'Patient Updated'})
+
+
+@app.delete('/delete/{patient_id}')
+def delete_patient(patient_id: str):
+
+    # load data
+    data = load_data()
+
+    # Chekc whether patient_id is coorect or not 
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail='Patient not Found')
+
+    del data[patient_id]
+
+    save_data(data)
+
+    return JSONResponse(status_code=200, content={'message': 'Patient deleted'})
 
