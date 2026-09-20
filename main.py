@@ -155,7 +155,7 @@ def create_patient(patient:Patient):
     return JSONResponse(status_code=201, content={'message': 'patient created successfully.'})
 
 
-############### Update the data of the patient ###############
+############### Update the patient details ###############
 @app.put('/edit/{patient_id}')
 # PatientUpdate is a pydantic object
 def update_patient(patient_id: str, patient_update: PatientUpdate):
@@ -185,7 +185,7 @@ def update_patient(patient_id: str, patient_update: PatientUpdate):
 
 
     # We convert existing_patient_info into object and recalucate bmi from the Patient class (1st class we created)
-    # We don't have id in a dictionary list som we need to add id.
+    # We don't have id in a dictionary list so, we need to add id.
     existing_patient_info['id'] = patient_id
     patient_pydantic_object = Patient(**existing_patient_info)
 
@@ -206,6 +206,7 @@ def update_patient(patient_id: str, patient_update: PatientUpdate):
     return JSONResponse(status_code=200, content={'message': 'Patient Updated'})
 
 
+############### Delete the patient details ###############
 @app.delete('/delete/{patient_id}')
 def delete_patient(patient_id: str):
 
